@@ -1,12 +1,20 @@
 plugins {
     kotlin("jvm")
+    id("org.jetbrains.dokka")
     `maven-publish`
-    `java-gradle-plugin`
     signing
 }
 
 group = "io.github.devngho"
 version = rootProject.version
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(kotlin("stdlib"))
+}
 
 fun PublishingExtension.kirok() {
     signing {
@@ -24,11 +32,7 @@ fun PublishingExtension.kirok() {
         }
     }
 
-    publications.withType(MavenPublication::class) {
-        groupId = project.group as String?
-        artifactId = "kirok-binding"
-        version = project.version as String?
-
+    fun MavenPublication.kirok() {
         pom {
             name.set(artifactId)
             description.set("WASM MVI 프레임워크")
@@ -54,6 +58,16 @@ fun PublishingExtension.kirok() {
                 url.set("https://github.com/devngho/kirok")
             }
         }
+    }
+
+    publications.create<MavenPublication>("maven")  {
+        groupId = project.group as String?
+        artifactId = "kirok-binding"
+        version = project.version as String?
+
+        from(components.getByName("java"))
+
+        kirok()
     }
 }
 

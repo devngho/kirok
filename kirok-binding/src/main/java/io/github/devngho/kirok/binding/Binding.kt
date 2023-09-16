@@ -6,7 +6,9 @@ import kotlin.reflect.KClass
 interface Binding {
     data class BindingModel(
         val name: String,
-        val values: Map<String, KClass<*>>
+        val values: Map<String, KClass<*>>,
+        val intents: Map<String, List<KClass<*>>>,
+        val protoFilePath: String
     )
 
     /**

@@ -1,11 +1,12 @@
 package io.github.devngho.kirok.plugin
 
+import com.google.gson.Gson
 import org.gradle.api.Project
 import java.io.File
 import java.net.URL
 import java.net.URLClassLoader
 
-object ClassLoader {
+object Loader {
     @Suppress("unchecked_cast")
     fun <T> getClass(target: Project, className: String): Class<T>? {
         when(className) {
@@ -37,4 +38,9 @@ object ClassLoader {
 
         return null
     }
+
+    @Suppress("unchecked_cast")
+    fun getModelData(target: Project):  Map<String, Map<String, Map<String, Any>>> =
+        Gson().fromJson(File("${target.projectDir}/build/generated/ksp/wasm/wasmMain/resources/kirok_model.json").readText(), Map::class.java)
+            as Map<String, Map<String, Map<String, String>>>
 }

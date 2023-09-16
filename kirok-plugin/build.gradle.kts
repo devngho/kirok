@@ -1,6 +1,3 @@
-import java.net.URL
-import java.util.zip.ZipFile
-
 plugins {
     kotlin("jvm")
     `maven-publish`
@@ -9,7 +6,7 @@ plugins {
 }
 
 group = "io.github.devngho"
-version = "1.0-SNAPSHOT"
+version = rootProject.version
 
 repositories {
     mavenCentral()
@@ -17,7 +14,13 @@ repositories {
 
 dependencies {
     compileOnly(gradleApi())
+    implementation(project(":kirok-binding"))
+    implementation(project(":"))
+    implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.5.1")
+    implementation("com.google.code.gson:gson:2.10.1")
     compileOnly("org.slf4j:slf4j-api:2.0.7")
 }
 
@@ -31,6 +34,8 @@ gradlePlugin {
         }
     }
 }
+
+kotlin.jvmToolchain(19)
 
 fun PublishingExtension.kirok() {
     signing {
