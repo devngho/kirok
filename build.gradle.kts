@@ -13,6 +13,13 @@ repositories {
     mavenCentral()
 }
 
+val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
+
+val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
+    dependsOn(dokkaHtml)
+    archiveClassifier.set("javadoc")
+    from(dokkaHtml.outputDirectory)
+}
 
 fun PublishingExtension.kirok() {
     signing {
@@ -35,7 +42,6 @@ fun PublishingExtension.kirok() {
             name.set(artifactId)
             description.set("Frontend Logic Library for Kotlin/Wasm")
             url.set("https://github.com/devngho/kirok")
-
 
             licenses {
                 license {
@@ -62,6 +68,9 @@ fun PublishingExtension.kirok() {
         groupId = project.group as String?
         artifactId = "kirok"
         version = project.version as String?
+
+        artifact(tasks["javadocJar"])
+
         kirok()
     }
 }
