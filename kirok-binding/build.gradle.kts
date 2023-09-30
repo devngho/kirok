@@ -16,6 +16,14 @@ dependencies {
     implementation(kotlin("stdlib"))
 }
 
+val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
+
+val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
+    dependsOn(dokkaHtml)
+    archiveClassifier.set("javadoc")
+    from(dokkaHtml.outputDirectory)
+}
+
 fun PublishingExtension.kirok() {
     signing {
         sign(publishing.publications)
@@ -65,6 +73,7 @@ fun PublishingExtension.kirok() {
         artifactId = "kirok-binding"
         version = project.version as String?
 
+        artifact(tasks["javadocJar"])
         from(components.getByName("java"))
 
         kirok()
