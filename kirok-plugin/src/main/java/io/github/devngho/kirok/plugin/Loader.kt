@@ -11,6 +11,22 @@ object Loader {
     fun <T> getClass(target: Project, className: String): Class<T>? {
         when(className) {
             "kotlin.Int" -> return Int::class.java as Class<T>
+            "kotlin.String" -> return String::class.java as Class<T>
+            "kotlin.Boolean" -> return Boolean::class.java as Class<T>
+            "kotlin.Double" -> return Double::class.java as Class<T>
+            "kotlin.Float" -> return Float::class.java as Class<T>
+            "kotlin.Long" -> return Long::class.java as Class<T>
+            "kotlin.Short" -> return Short::class.java as Class<T>
+            "kotlin.Byte" -> return Byte::class.java as Class<T>
+            "kotlin.Char" -> return Char::class.java as Class<T>
+            "kotlin.collections.List" -> return List::class.java as Class<T>
+            "kotlin.collections.Map" -> return Map::class.java as Class<T>
+            "kotlin.collections.Set" -> return Set::class.java as Class<T>
+            "kotlin.collections.Collection" -> return Collection::class.java as Class<T>
+            "kotlin.collections.MutableList" -> return MutableList::class.java as Class<T>
+            "kotlin.collections.MutableMap" -> return MutableMap::class.java as Class<T>
+            "kotlin.collections.MutableSet" -> return MutableSet::class.java as Class<T>
+            "kotlin.collections.MutableCollection" -> return MutableCollection::class.java as Class<T>
         }
 
         try {
@@ -23,18 +39,21 @@ object Loader {
 
         val files = target.configurations.getAt("jvmCompileClasspath").plus(File("${target.projectDir}/build/libs").listFiles()!!.filter { it.extension == "jar" && !it.name.contains("metadata") })
 
-        target.logger.warn("try load class $className from \n  - ${files.joinToString("\n  - ") { it.absolutePath }}.")
+//        target.logger.warn("try load class $className from \n  - ${files.joinToString("\n  - ") { it.absolutePath }}.")
 
         files.forEach {
             try {
-                target.logger.warn("try load class $className from ${it.absolutePath}.")
+//                target.logger.warn("try load class $className from ${it.absolutePath}.")
                 val child = URLClassLoader(
                     arrayOf<URL>(it.toURI().toURL()),
                     this.javaClass.getClassLoader()
                 )
-                return Class.forName(className, true, child) as Class<T>
+                return (try { child.loadClass(className) } catch (_: Exception) {  } ?: Class.forName(className, true, child)) as Class<T>
             } catch (_: Exception) {}
         }
+
+        target.logger.warn("failed to load class $className from ${files.count()} jar files.")
+        target.logger.warn("kirok has tried to load class $className from \n  - ${files.joinToString("\n  - ") { it.absolutePath }}.")
 
         return null
     }

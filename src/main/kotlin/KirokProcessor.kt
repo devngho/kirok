@@ -4,6 +4,7 @@ import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
@@ -15,6 +16,7 @@ class KirokProcessor(private val codeGenerator: CodeGenerator, private val logge
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (resolver.getKotlinClassByName("org.w3c.dom.HTMLDivElement") != null) {
+            if (useLog) logger.warn("KirokProcessor building wasm code")
             processWasm(resolver)
         }
 
@@ -46,7 +48,7 @@ class KirokProcessor(private val codeGenerator: CodeGenerator, private val logge
             .forEach {
                 if (useLog) logger.warn("Building model ${it.simpleName.asString()}")
                 p = it.packageName .asString()  + "._kirok"
-                KirokModel.generateModel(p, resolver, it, logger).writeTo(codeGenerator, Dependencies(true))
+                KirokModel.generateModel(p, resolver, it, logger).writeTo(codeGenerator, Dependencies(true, it.containingFile!!))
             }
 
         return p
@@ -83,7 +85,7 @@ class KirokProcessor(private val codeGenerator: CodeGenerator, private val logge
                     it.parameters.first().type.resolve().toClassName().canonicalName == outerPair.first.toClassName().canonicalName
                 }
 
-            stringBuilder.append("  \"${outerPair.first}\": {\n")
+            stringBuilder.append("  \"${outerPair.first.qualifiedName?.asString()}\": {\n")
             stringBuilder.append("        \"values\": {\n")
             outerPair.second.forEachIndexed { index, innerPair ->
                 stringBuilder.append("    \"${innerPair.first}\": \"${innerPair.second}\"")
@@ -96,7 +98,7 @@ class KirokProcessor(private val codeGenerator: CodeGenerator, private val logge
             stringBuilder.append("    },")
             stringBuilder.append("    \"intents\": {\n")
             intents.forEachIndexed { index, intent ->
-                stringBuilder.append("      \"${intent.simpleName.asString()}\": [${intent.parameters.joinToString(separator = ",") { "\"${it.type.resolve().toClassName().canonicalName}\"" }}]\n")
+                stringBuilder.append("      \"${if (intent.modifiers.contains(Modifier.SUSPEND)) "SUSPEND_" else ""}${intent.simpleName.asString()}\": [${intent.parameters.joinToString(separator = ",") { "\"${it.type.resolve().toClassName().canonicalName}\"" }}]\n")
                 if (index != intents.count() - 1) {
                     stringBuilder.append(",\n")
                 } else {

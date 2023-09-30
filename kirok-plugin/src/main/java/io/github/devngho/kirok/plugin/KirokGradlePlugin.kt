@@ -1,7 +1,6 @@
 package io.github.devngho.kirok.plugin
 
 import io.github.devngho.kirok.plugin.GenerateKirokBinding.generateKirokBinding
-import io.github.devngho.kirok.plugin.GenerateProtoBufScheme.generateProtoBufScheme
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
@@ -30,22 +29,22 @@ class KirokGradlePlugin: Plugin<Project> {
             }
             kotlinExtension.sourceSets.maybeCreate("jvmMain").apply {
                 dependencies {
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf-jvm:1.5.1")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.5.1")
                 }
             }
             kotlinExtension.sourceSets.maybeCreate("wasmMain").apply {
                 dependencies {
+                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2-wasm0")
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-wasm:1.5.2-wasm0")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf-wasm:1.5.2-wasm0")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-wasm:1.5.2-wasm0")
                     implementation("org.jetbrains.kotlinx:atomicfu-wasm:0.20.2-wasm0")
                 }
             }
             extensions.create("kirok", KirokExtension::class.java)
 
             task("generateKirokBinding").generateKirokBinding(target)
-            task("generateProtoBufScheme").generateProtoBufScheme(target)
 
-            tasks.getByName("assemble").finalizedBy("generateProtoBufScheme", "generateKirokBinding")
+            tasks.getByName("assemble").finalizedBy("generateKirokBinding")
         }
     }
 

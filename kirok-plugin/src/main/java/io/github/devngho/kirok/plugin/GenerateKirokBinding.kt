@@ -1,6 +1,7 @@
 package io.github.devngho.kirok.plugin
 
 import io.github.devngho.kirok.binding.Binding
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -24,22 +25,26 @@ object GenerateKirokBinding {
                 bindingList.forEach { b ->
                     b.create(Path.of(target.projectDir.path, binding.bindingDir), model.map { (k, v) ->
                         Binding.BindingModel(k,
-                            v["values"]!!.map { (k, _) ->
-                                k to /* getClass<Any>(target, v)!!.kotlin */ Any::class
+                            v["values"]!!.map { (k, m) ->
+                                k to Loader.getClass<Any>(target, m as String)!!.kotlin
                             }.toMap(),
                             v["intents"]!!.mapNotNull { (k, v) ->
-                                if (v is List<*>) k to v.map { /* getClass<Any>(target, v)!!.kotlin */ Any::class } else null
-                            }.toMap(),
-                            "${target.projectDir}/build/generated/kirok/$k.proto"
+                                if (v is List<*>) k to v.map { m -> Loader.getClass<Any>(target, m as String)!!.kotlin } else null
+                            }.toMap()
                         )
                     })
                 }
             }
 
             try {
-                File("${target.projectDir}/build/compileSync/wasm/main")
-                    .listFiles()!!.first().listFiles()!!.first().listFiles()?.find { it.extension == "wasm" }
-                    ?.copyTo(File(binding.wasmDir, "index.wasm"))
+                val targetWasm = File(binding.wasmDir, "index.wasm")
+                if (targetWasm.exists()) targetWasm.delete()
+                runBlocking {
+                    delay(500L)
+                    File("${target.projectDir}/build/compileSync/wasm/main")
+                        .listFiles()!!.first().listFiles()!!.first().listFiles()?.find { it.extension == "wasm" }
+                        ?.copyTo(targetWasm, overwrite = true)
+                }
             } catch (_: Exception) {}
 
             try {
@@ -47,7 +52,11 @@ object GenerateKirokBinding {
                     .listFiles()!!.first().listFiles()!!.first().listFiles()?.filter { it.extension.contains("js") }
                     ?.forEach {
                         val copyTarget = File(binding.wasmJsDir, it.name.replace("${project.name}-wasm", "index"))
-                        copyTarget.writeText(it.readText().replace("${project.name}-wasm", "index"))
+                        copyTarget.writeText(
+                            it.readText()
+                                .replace("${project.name}-wasm", "index")
+                                .replace("./index.wasm", "/index.wasm")
+                        )
                     }
             } catch (_: Exception) {}
         }

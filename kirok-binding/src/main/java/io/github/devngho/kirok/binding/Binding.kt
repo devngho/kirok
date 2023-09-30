@@ -8,7 +8,7 @@ interface Binding {
         val name: String,
         val values: Map<String, KClass<*>>,
         val intents: Map<String, List<KClass<*>>>,
-        val protoFilePath: String
+//        val protoFilePath: String
     )
 
     /**

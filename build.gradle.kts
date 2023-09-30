@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "1.9.0"
+    kotlin("multiplatform") version "1.9.10"
     id("org.jetbrains.dokka") version "1.8.20"
     id("com.google.devtools.ksp") version "1.9.0-1.0.13" apply false
     signing
@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.devngho"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 repositories {
     mavenCentral()
@@ -81,7 +81,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("reflect"))
                 implementation("com.squareup:kotlinpoet-ksp:1.14.2")
-                implementation("com.google.devtools.ksp:symbol-processing-api:1.9.0-1.0.13")
+                implementation("com.google.devtools.ksp:symbol-processing-api:1.9.10-1.0.13")
             }
             kotlin.srcDir("src/main/kotlin")
             resources.srcDir("src/main/resources")
