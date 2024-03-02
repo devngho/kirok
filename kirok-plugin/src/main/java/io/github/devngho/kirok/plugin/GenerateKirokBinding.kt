@@ -1,68 +1,55 @@
 package io.github.devngho.kirok.plugin
 
 import io.github.devngho.kirok.binding.Binding
-import kotlinx.coroutines.delay
+import io.github.devngho.kirok.binding.BindingModel
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.file.Path
+import kotlin.reflect.full.primaryConstructor
 
 
-object GenerateKirokBinding {
-    fun Task.generateKirokBinding(target: Project) {
-        doLast {
-            val binding = target.extensions.getByName("kirok") as KirokExtension
-            val bindingList = binding.binding.map {
-                getBinding(target, it)
-            }.filterIsInstance<Binding>()
+abstract class GenerateKirokBinding: DefaultTask() {
+    @TaskAction
+    fun generateKirokBinding() {
+        val binding = project.extensions.getByName("kirok") as KirokExtension
+        val bindingList = binding.binding.map {
+            getBinding(project, it)
+        }.filterIsInstance<Binding>()
 
-            listOf(File(binding.wasmDir), File(binding.bindingDir)).forEach { if (!it.exists()) it.mkdirs() }
+        listOf(File(binding.wasmDir), File(binding.bindingDir)).forEach { if (!it.exists()) it.mkdirs() }
 
-            val model = Loader.getModelData(target)
+        val models = Loader.getModelData(project)
 
-            runBlocking {
-                bindingList.forEach { b ->
-                    b.create(Path.of(target.projectDir.path, binding.bindingDir), model.map { (k, v) ->
-                        Binding.BindingModel(k,
-                            v["values"]!!.map { (k, m) ->
-                                k to Loader.getClass<Any>(target, m as String)!!.kotlin
-                            }.toMap(),
-                            v["intents"]!!.mapNotNull { (k, v) ->
-                                if (v is List<*>) k to v.map { m -> Loader.getClass<Any>(target, m as String)!!.kotlin } else null
-                            }.toMap()
-                        )
-                    })
-                }
+        runBlocking {
+            // Parse serialized model and its intent
+            bindingList.forEach { b ->
+                b.create(Path.of(project.projectDir.path, binding.bindingDir), models.map { (k, v) ->
+                    val model = v.jsonObject
+
+                    BindingModel(k,
+                        model["values"]!!.jsonObject.map { (k, m) ->
+                            k to Loader.parseType<Any>(project, m.jsonPrimitive.content)!!
+                        }.toMap(),
+                        model["intents"]!!.jsonObject.mapValues { (_, intent) ->
+                            intent.jsonObject.mapValues { (_, type) -> Loader.parseType<Any>(project, type.jsonPrimitive.content)!! }
+                        },
+                        model["init"]!!.jsonObject.mapValues {
+                            Loader.parseType<Any>(project, it.value.jsonPrimitive.content)!!
+                        },
+                        model["isInitSuspend"]!!.jsonPrimitive.boolean
+                    )
+                })
             }
-
-            try {
-                val targetWasm = File(binding.wasmDir, "index.wasm")
-                if (targetWasm.exists()) targetWasm.delete()
-                runBlocking {
-                    delay(500L)
-                    File("${target.projectDir}/build/compileSync/wasm/main")
-                        .listFiles()!!.first().listFiles()!!.first().listFiles()?.find { it.extension == "wasm" }
-                        ?.copyTo(targetWasm, overwrite = true)
-                }
-            } catch (_: Exception) {}
-
-            try {
-                File("${target.projectDir}/build/compileSync/wasm/main")
-                    .listFiles()!!.first().listFiles()!!.first().listFiles()?.filter { it.extension.contains("js") }
-                    ?.forEach {
-                        val copyTarget = File(binding.wasmJsDir, it.name.replace("${project.name}-wasm", "index"))
-                        copyTarget.writeText(
-                            it.readText()
-                                .replace("${project.name}-wasm", "index")
-                                .replace("./index.wasm", "/index.wasm")
-                        )
-                    }
-            } catch (_: Exception) {}
         }
     }
 
     private fun getBinding(target: Project, className: String): Binding? {
-        return Loader.getClass<Binding>(target, className)?.getDeclaredConstructor()?.newInstance()
+        return Loader.getClass<Binding>(target, className)?.primaryConstructor?.call()
     }
 }

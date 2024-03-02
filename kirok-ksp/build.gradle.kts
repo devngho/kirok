@@ -1,20 +1,29 @@
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
-
 plugins {
-    kotlin("jvm") version "1.9.22" apply false
-    kotlin("multiplatform") version "1.9.22"
-    kotlin("plugin.serialization") version "1.9.22"
-    id("org.jetbrains.dokka") version "1.9.10"
-    id("com.google.devtools.ksp") version "1.9.22-1.0.17" apply false
+    kotlin("jvm")
+    kotlin("plugin.serialization")
+    id("org.jetbrains.dokka")
     signing
     `maven-publish`
 }
 
 group = "io.github.devngho"
-version = "1.1.0"
+version = rootProject.version
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("com.squareup:kotlinpoet-ksp:1.14.2")
+    implementation("com.google.devtools.ksp:symbol-processing-api:1.9.22-1.0.17")
+    implementation(kotlin("reflect"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
@@ -76,12 +85,12 @@ fun PublishingExtension.kirok() {
         }
     }
 
-    publications.withType(MavenPublication::class) {
+    publications.create<MavenPublication>("maven")  {
         groupId = project.group as String?
-        artifactId = "kirok"
+        artifactId = "kirok-ksp"
         version = project.version as String?
 
-        artifact(tasks["javadocJar"])
+        from(components.getByName("java"))
 
         kirok()
     }
@@ -91,50 +100,9 @@ kotlin {
     publishing {
         kirok()
     }
-
-    jvm()
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser { binaries.executable() }
-    }
-
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(kotlin("reflect"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-            }
-        }
-
-        applyDefaultHierarchyTemplate()
-    }
 }
 
-tasks {
-    val taskList = this.toList().map { it.name }
-    getByName("signKotlinMultiplatformPublication") {
-        if (taskList.contains("publishJvmPublicationToSonatypeReleaseRepositoryRepository"))
-            dependsOn(
-                "publishJvmPublicationToSonatypeReleaseRepositoryRepository",
-                "publishJvmPublicationToMavenLocalRepository",
-                "publishJvmPublicationToMavenLocal"
-            )
-        else dependsOn("publishJvmPublicationToMavenLocalRepository", "publishJvmPublicationToMavenLocal")
-    }
-    getByName("signWasmJsPublication") {
-        if (taskList.contains("publishJvmPublicationToSonatypeReleaseRepositoryRepository"))
-            dependsOn(
-                "publishJvmPublicationToSonatypeReleaseRepositoryRepository",
-                "publishKotlinMultiplatformPublicationToSonatypeReleaseRepositoryRepository",
-                "publishJvmPublicationToMavenLocal",
-                "publishJvmPublicationToMavenLocalRepository",
-                "publishKotlinMultiplatformPublicationToMavenLocalRepository"
-            )
-        else
-            dependsOn(
-                "publishJvmPublicationToMavenLocal",
-                "publishKotlinMultiplatformPublicationToMavenLocal",
-                "publishKotlinMultiplatformPublicationToMavenLocalRepository"
-            )
-    }
+java {
+    withSourcesJar()
+    withJavadocJar()
 }

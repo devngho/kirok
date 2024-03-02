@@ -30,12 +30,20 @@ fun PublishingExtension.kirok() {
     }
 
     repositories {
-        if (version.toString().endsWith("SNAPSHOT")) {
-            mavenLocal()
-        } else {
+        mavenLocal()
+        val id: String =
+            if (project.hasProperty("repoUsername")) project.property("repoUsername") as String
+            else System.getenv("repoUsername")
+        val pw: String =
+            if (project.hasProperty("repoPassword")) project.property("repoPassword") as String
+            else System.getenv("repoPassword")
+        if (!version.toString().endsWith("SNAPSHOT")) {
             maven("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
                 name = "sonatypeReleaseRepository"
-                credentials(PasswordCredentials::class)
+                credentials {
+                    username = id
+                    password = pw
+                }
             }
         }
     }
@@ -43,9 +51,8 @@ fun PublishingExtension.kirok() {
     fun MavenPublication.kirok() {
         pom {
             name.set(artifactId)
-            description.set("WASM MVI 프레임워크")
+            description.set("Frontend Logic Library for Kotlin/Wasm")
             url.set("https://github.com/devngho/kirok")
-
 
             licenses {
                 license {
@@ -73,7 +80,6 @@ fun PublishingExtension.kirok() {
         artifactId = "kirok-binding"
         version = project.version as String?
 
-        artifact(tasks["javadocJar"])
         from(components.getByName("java"))
 
         kirok()
@@ -84,4 +90,9 @@ kotlin {
     publishing {
         kirok()
     }
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
 }

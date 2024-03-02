@@ -1,6 +1,5 @@
 package io.github.devngho.kirok.plugin
 
-import io.github.devngho.kirok.plugin.GenerateKirokBinding.generateKirokBinding
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
@@ -24,26 +23,39 @@ class KirokGradlePlugin: Plugin<Project> {
             kotlinExtension.sourceSets.forEach {
                 it.dependencies {
                     implementation("io.github.devngho:kirok:$kirokVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.5.1")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.2")
                 }
             }
             kotlinExtension.sourceSets.maybeCreate("jvmMain").apply {
                 dependencies {
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.5.1")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
                 }
             }
-            kotlinExtension.sourceSets.maybeCreate("wasmMain").apply {
+            kotlinExtension.sourceSets.maybeCreate("wasmJsMain").apply {
                 dependencies {
-                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2-wasm0")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-wasm:1.5.2-wasm0")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-wasm:1.5.2-wasm0")
-                    implementation("org.jetbrains.kotlinx:atomicfu-wasm:0.20.2-wasm0")
+                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2-wasm3")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-wasm-js:1.6.1-wasm1")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-wasm-js:1.6.1-wasm1")
+                    implementation("org.jetbrains.kotlinx:atomicfu-wasm-js:0.22.0-wasm2")
                 }
             }
+
             extensions.create("kirok", KirokExtension::class.java)
 
-            task("generateKirokBinding").generateKirokBinding(target)
+            tasks.register("generateKirokBinding", GenerateKirokBinding::class.java) {
+                it.dependsOn("copyBinding")
+            }
+            tasks.register("copyBinding", CopyBinding::class.java) {
+                val dependTargets =
+                    listOf("compileKotlinWasmJs", "compileProductionExecutableKotlinWasmJs", "compileProductionExecutableKotlinWasmJsOptimize")
+                        .filter { t -> tasks.findByName(t) != null }
+                it.dependsOn(dependTargets)
 
+                it.inputJSDir.set(layout.projectDirectory.dir("build/compileSync/wasmJs/main"))
+                it.outputJSDir.set(layout.projectDirectory.dir("build/generated/kirok"))
+                it.inputWasmDir.set(layout.projectDirectory.dir("build/compileSync/wasmJs/main"))
+                it.outputWasmDir.set(layout.projectDirectory.dir("build/generated/kirok"))
+            }
             tasks.getByName("assemble").finalizedBy("generateKirokBinding")
         }
     }
@@ -61,14 +73,17 @@ open class KirokExtension {
     var bindingDir = "./build/generated/kirok"
     var wasmDir = "./build/generated/kirok"
     var wasmJsDir = "./build/generated/kirok"
+
+    var neverUseNode = false
+    var disableImportMap = true
 }
 
 @Suppress("unused")
 fun DependencyHandler.kirok(project: Project) {
     val kirokVersion = project.plugins.getPlugin(KirokGradlePlugin::class.java).getVersion(project)
 
-    add("kspWasm", "io.github.devngho:kirok:$kirokVersion")
-    add("kspWasmTest", "io.github.devngho:kirok:$kirokVersion")
-    add("kspJvm", "io.github.devngho:kirok:$kirokVersion")
-    add("kspJvmTest", "io.github.devngho:kirok:$kirokVersion")
+    add("kspWasmJs", "io.github.devngho:kirok-ksp:$kirokVersion")
+    add("kspWasmJsTest", "io.github.devngho:kirok-ksp:$kirokVersion")
+    add("kspJvm", "io.github.devngho:kirok-ksp:$kirokVersion")
+    add("kspJvmTest", "io.github.devngho:kirok-ksp:$kirokVersion")
 }

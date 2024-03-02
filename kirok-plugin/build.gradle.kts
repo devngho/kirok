@@ -16,11 +16,10 @@ dependencies {
     compileOnly(gradleApi())
     implementation(project(":kirok-binding"))
     implementation(project(":"))
-    implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.5.1")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
+//    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.5.1")
     compileOnly("org.slf4j:slf4j-api:2.0.7")
 }
 
