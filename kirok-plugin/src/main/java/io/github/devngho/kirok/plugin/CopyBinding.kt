@@ -49,6 +49,7 @@ abstract class CopyBinding: DefaultTask() {
                     f.readText()
                         .replace("${project.name}-wasm-js", "index") // File name swap
                         .replace("./index.wasm", "/index.wasm")  // wasm file path swap
+                        .replace("new URL('/index.wasm',import.meta.url).href", "'/index.wasm'")
                         .run {
                             if (binding.neverUseNode) replace(
                                 Regex("if \\(isNodeJs\\) \\{.+?\\}", RegexOption.DOT_MATCHES_ALL),
