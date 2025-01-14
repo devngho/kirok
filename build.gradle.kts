@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "io.github.devngho"
-version = "1.1.2"
+version = "1.1.3"
 
 repositories {
     mavenCentral()
@@ -127,6 +127,7 @@ tasks {
                 "publishKotlinMultiplatformPublicationToSonatypeReleaseRepositoryRepository",
                 "publishJvmPublicationToMavenLocal",
                 "publishJvmPublicationToMavenLocalRepository",
+                "publishKotlinMultiplatformPublicationToMavenLocal",
                 "publishKotlinMultiplatformPublicationToMavenLocalRepository"
             )
         else

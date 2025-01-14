@@ -16,7 +16,7 @@ class KirokProcessor(private val codeGenerator: CodeGenerator, private val logge
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        if (resolver.getKotlinClassByName("org.w3c.dom.HTMLDivElement") != null) {
+        if (resolver.getDeclarationsFromPackage("kotlin.wasm").toList().isNotEmpty()) {
             if (useLog) logger.warn("KirokProcessor building wasm code")
             processWasm(resolver)
         }
