@@ -17,26 +17,13 @@ class KirokGradlePlugin: Plugin<Project> {
                 return
             }
 
-            repositories.maven {
-                it.url = URI("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
-            }
             kotlinExtension.sourceSets.forEach {
                 it.dependencies {
                     implementation("io.github.devngho:kirok:$kirokVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.2")
-                }
-            }
-            kotlinExtension.sourceSets.maybeCreate("jvmMain").apply {
-                dependencies {
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-                }
-            }
-            kotlinExtension.sourceSets.maybeCreate("wasmJsMain").apply {
-                dependencies {
-                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2-wasm3")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-wasm-js:1.6.1-wasm1")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-wasm-js:1.6.1-wasm1")
-                    implementation("org.jetbrains.kotlinx:atomicfu-wasm-js:0.22.0-wasm2")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.0")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
+                    implementation("org.jetbrains.kotlinx:atomicfu:0.27.0")
                 }
             }
 

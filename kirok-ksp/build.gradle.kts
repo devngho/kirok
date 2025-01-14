@@ -16,9 +16,9 @@ repositories {
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-    implementation("com.squareup:kotlinpoet-ksp:1.14.2")
-    implementation("com.google.devtools.ksp:symbol-processing-api:1.9.22-1.0.17")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation("com.squareup:kotlinpoet-ksp:2.0.0")
+    implementation("com.google.devtools.ksp:symbol-processing-api:2.1.0-1.0.29")
     implementation(kotlin("reflect"))
 }
 

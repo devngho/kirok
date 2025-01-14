@@ -1,17 +1,17 @@
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 
 plugins {
-    kotlin("jvm") version "1.9.22" apply false
-    kotlin("multiplatform") version "1.9.22"
-    kotlin("plugin.serialization") version "1.9.22"
-    id("org.jetbrains.dokka") version "1.9.10"
-    id("com.google.devtools.ksp") version "1.9.22-1.0.17" apply false
+    kotlin("jvm") version "2.1.0" apply false
+    kotlin("multiplatform") version "2.1.0"
+    kotlin("plugin.serialization") version "2.1.0"
+    id("com.google.devtools.ksp") version "2.1.0-1.0.29" apply false
+    id("org.jetbrains.dokka") version "2.0.0"
     signing
     `maven-publish`
 }
 
 group = "io.github.devngho"
-version = "1.1.0"
+version = "1.1.2"
 
 repositories {
     mavenCentral()
@@ -93,7 +93,6 @@ kotlin {
     }
 
     jvm()
-    @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser { binaries.executable() }
     }
@@ -102,7 +101,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(kotlin("reflect"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
             }
         }
 
